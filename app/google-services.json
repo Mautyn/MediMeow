@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1031572814627",
+    "project_id": "medimeow-6d3ab5be",
+    "storage_bucket": "medimeow-6d3ab5be.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1031572814627:android:0da12a49ad09d898e2aa96",
+        "android_client_info": {
+          "package_name": "pl.edu.pk.student.medimeow"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCs3cmrWvMKVVTxyXDvhLHbld7MoOiUvsE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
