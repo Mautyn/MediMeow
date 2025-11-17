@@ -11,7 +11,6 @@ import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
 import pl.edu.pk.student.core.ui.theme.MediMeowTheme
 import pl.edu.pk.student.medimeow.viewmodel.MainViewModel
-import kotlin.getValue
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -22,14 +21,20 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         val content: View = findViewById(android.R.id.content)
-        content.viewTreeObserver.addOnPreDrawListener { mainViewModel.authState.value != AuthState.Loading }
+        content.viewTreeObserver.addOnPreDrawListener {
+            mainViewModel.authState.value != AuthState.Loading
+        }
 
         setContent {
-            MediMeowTheme {
+            val isDarkMode = mainViewModel.isDarkMode.collectAsStateWithLifecycle().value
+
+            MediMeowTheme(darkTheme = isDarkMode) {
                 val navController = rememberNavController()
                 val authState = mainViewModel.authState.collectAsStateWithLifecycle().value
+
                 if (authState != AuthState.Loading) {
-                    AppNavigator(navController,
+                    AppNavigator(
+                        navController,
                         authState,
                         onSignOut = mainViewModel::signOut
                     )
@@ -38,4 +43,3 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-

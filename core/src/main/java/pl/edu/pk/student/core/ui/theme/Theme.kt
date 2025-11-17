@@ -16,6 +16,8 @@ private val DarkColorScheme = darkColorScheme(
     onPrimary = pl.edu.pk.student.core.ui.theme.OnPrimary,
     background = pl.edu.pk.student.core.ui.theme.BackgroundDark,
     surface = pl.edu.pk.student.core.ui.theme.SurfaceDark,
+    secondary = pl.edu.pk.student.core.ui.theme.OnPrimarySecond,
+    onBackground = pl.edu.pk.student.core.ui.theme.onBackground,
 
     outline = Color(0xFF888888),
     outlineVariant = Color(0xFF444444),
@@ -31,6 +33,10 @@ private val LightColorScheme = lightColorScheme(
     onPrimary = pl.edu.pk.student.core.ui.theme.OnPrimary,
     background = pl.edu.pk.student.core.ui.theme.BackgroundLight,
     surface = pl.edu.pk.student.core.ui.theme.SurfaceLight,
+    secondary = pl.edu.pk.student.core.ui.theme.OnPrimarySecond,
+    onBackground = pl.edu.pk.student.core.ui.theme.onBackground,
+
+
 
     outline = Color(0xFF888888),
     outlineVariant = Color(0xFF444444),
