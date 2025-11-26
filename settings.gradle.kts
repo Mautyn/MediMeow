@@ -17,6 +17,11 @@ dependencyResolutionManagement {
 rootProject.name = "MediMeow"
 include(":app")
 include(":feature_auth")
-include(":feature_profile")
 include(":feature_home")
 include(":core")
+include(":feature_dashboard")
+include(":feature_medicine_search")
+include(":feature_interactions")
+include(":feature_settings")
+include(":feature_medical_records")
+include(":feature_profile")
