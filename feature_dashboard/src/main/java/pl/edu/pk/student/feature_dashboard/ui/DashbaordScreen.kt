@@ -50,7 +50,6 @@ fun DashboardScreen(
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Header Section
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -74,7 +73,6 @@ fun DashboardScreen(
             )
         }
 
-        // Tiles Grid
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -82,7 +80,6 @@ fun DashboardScreen(
         ) {
             if (deviceConfiguration == DeviceConfiguration.MOBILE_PORTRAIT ||
                 deviceConfiguration == DeviceConfiguration.MOBILE_LANDSCAPE) {
-                // Mobile: Use LazyVerticalGrid for better performance
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(columns),
                     contentPadding = PaddingValues(0.dp),
@@ -100,7 +97,6 @@ fun DashboardScreen(
                     }
                 }
             } else {
-                // Tablet/Desktop: Use regular Column with Rows
                 Column(
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                     modifier = Modifier.fillMaxWidth()
@@ -117,7 +113,6 @@ fun DashboardScreen(
                                     modifier = Modifier.weight(1f)
                                 )
                             }
-                            // Fill remaining space if row is not complete
                             repeat(columns - rowTiles.size) {
                                 Spacer(modifier = Modifier.weight(1f))
                             }

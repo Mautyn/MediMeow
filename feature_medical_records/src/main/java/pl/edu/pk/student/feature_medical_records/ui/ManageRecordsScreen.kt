@@ -12,13 +12,15 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import pl.edu.pk.student.feature_medical_records.domain.models.MedicalRecord
 import pl.edu.pk.student.feature_medical_records.domain.models.MedicalRecordType
+import pl.edu.pk.student.feature_medical_records.viewmodel.MedicalRecordsViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -26,19 +28,39 @@ import java.util.*
 @Composable
 fun ManageRecordsScreen(
     recordType: MedicalRecordType,
-    records: List<MedicalRecord>,
     onBack: () -> Unit,
-    onDeleteRecord: (MedicalRecord) -> Unit,
-    onUpdateRecord: (MedicalRecord, String, String?) -> Unit,
+    viewModel: MedicalRecordsViewModel = hiltViewModel()
 ) {
+    val context = LocalContext.current
+    var recordToEdit by remember { mutableStateOf<MedicalRecord?>(null) }
     var recordToDelete by remember { mutableStateOf<MedicalRecord?>(null) }
+
+    val records by viewModel.getRecordsFlow(recordType).collectAsStateWithLifecycle()
+    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
+    val successMessage by viewModel.successMessage.collectAsStateWithLifecycle()
+    val errorMessage by viewModel.errorMessage.collectAsStateWithLifecycle()
+
+    LaunchedEffect(errorMessage) {
+        errorMessage?.let {
+            Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+            viewModel.clearMessages()
+        }
+    }
+
+    LaunchedEffect(successMessage) {
+        successMessage?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            viewModel.clearMessages()
+        }
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(
                     text = "Manage ${recordType.title}",
-                )},
+                    color = MaterialTheme.colorScheme.onPrimary
+                ) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
@@ -50,7 +72,16 @@ fun ManageRecordsScreen(
             )
         }
     ) { padding ->
-        if (records.isEmpty()) {
+        if (isLoading && records.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        } else if (records.isEmpty()) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -78,12 +109,24 @@ fun ManageRecordsScreen(
             ) {
                 items(records) { record ->
                     ManageRecordCard(
-                        record,
+                        record = record,
+                        onEdit = { recordToEdit = record },
                         onDelete = { recordToDelete = record }
                     )
                 }
             }
         }
+    }
+
+    recordToEdit?.let { record ->
+        EditRecordDialog(
+            record = record,
+            onDismiss = { recordToEdit = null },
+            onSave = { newTitle, newContent ->
+                viewModel.updateRecord(record, newTitle, newContent)
+                recordToEdit = null
+            }
+        )
     }
 
     recordToDelete?.let { record ->
@@ -94,11 +137,11 @@ fun ManageRecordsScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        onDeleteRecord(record)
+                        viewModel.deleteRecord(record.id)
                         recordToDelete = null
                     },
                     colors = ButtonDefaults.textButtonColors(
-                        contentColor = MaterialTheme.colorScheme.error
+                        contentColor = Color.Red
                     )
                 ) {
                     Text("Delete")
@@ -114,7 +157,11 @@ fun ManageRecordsScreen(
 }
 
 @Composable
-private fun ManageRecordCard(record: MedicalRecord, onDelete: () -> Unit) {
+private fun ManageRecordCard(
+    record: MedicalRecord,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit
+) {
     val dateFormat = SimpleDateFormat("MMM dd, yyyy - HH:mm", Locale.getDefault())
 
     Card(
@@ -155,13 +202,79 @@ private fun ManageRecordCard(record: MedicalRecord, onDelete: () -> Unit) {
                     color = MaterialTheme.colorScheme.onSurface.copy(0.5f)
                 )
             }
-            IconButton(onClick = onDelete) {
-                Icon(
-                    Icons.Default.Delete,
-                    contentDescription = "Delete",
-                    tint = MaterialTheme.colorScheme.error
-                )
+            Row {
+                IconButton(onClick = onEdit) {
+                    Icon(
+                        Icons.Default.Edit,
+                        contentDescription = "Edit",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+                IconButton(onClick = onDelete) {
+                    Icon(
+                        Icons.Default.Delete,
+                        contentDescription = "Delete",
+                        tint = Color.Red
+                    )
+                }
             }
         }
     }
+}
+
+@Composable
+private fun EditRecordDialog(
+    record: MedicalRecord,
+    onDismiss: () -> Unit,
+    onSave: (String, String?) -> Unit
+) {
+    var title by remember { mutableStateOf(record.title) }
+    var content by remember { mutableStateOf(record.content ?: "") }
+    val context = LocalContext.current
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Edit Record") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedTextField(
+                    value = title,
+                    onValueChange = { title = it },
+                    label = { Text("Title") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                )
+
+                if (record.isTextRecord) {
+                    OutlinedTextField(
+                        value = content,
+                        onValueChange = { content = it },
+                        label = { Text("Content") },
+                        modifier = Modifier.fillMaxWidth().height(150.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        maxLines = 6
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    if (title.isBlank()) {
+                        Toast.makeText(context, "Title cannot be empty", Toast.LENGTH_SHORT).show()
+                    } else {
+                        onSave(title, if (record.isTextRecord) content else null)
+                    }
+                }
+            ) {
+                Text("Save")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
 }

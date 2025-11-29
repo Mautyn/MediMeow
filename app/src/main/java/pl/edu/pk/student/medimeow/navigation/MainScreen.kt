@@ -146,7 +146,8 @@ fun MainScreen(
 
             composable("profile") {
                 ProfileScreen(
-                    onNavigateToChangePassword = onNavigateToChangePassword
+                    onNavigateToChangePassword = onNavigateToChangePassword,
+                    onSignOut = onSignOut
                 )
             }
 

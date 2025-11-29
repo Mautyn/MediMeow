@@ -58,10 +58,16 @@ dependencies {
     implementation(libs.material.icons.extended)
     implementation(libs.material3.adaptive)
 
-    // Room
-    implementation(libs.androidx.room.runtime)
-    implementation(libs.androidx.room.ktx)
-    ksp(libs.androidx.room.compiler)
+    // Firebase
+    implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
+    implementation("com.google.firebase:firebase-firestore-ktx")
+    implementation(libs.firebase.auth)
+
+    // Coroutines
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
+
+    // Coil for temporary image preview (before Base64 conversion)
+    implementation("io.coil-kt:coil-compose:2.5.0")
 
     implementation(libs.hilt.android)
     implementation(libs.hilt.navigation.compose)

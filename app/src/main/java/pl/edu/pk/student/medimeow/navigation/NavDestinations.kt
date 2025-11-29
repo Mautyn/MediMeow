@@ -13,15 +13,19 @@ sealed class NavDestinations(val route: String) {
 
     // Medical Records
     object MedicalRecordsMenu : NavDestinations("medical_records_menu")
+
     object MedicalRecordDetail : NavDestinations("medical_record_detail/{recordType}") {
         fun createRoute(recordType: String) = "medical_record_detail/$recordType"
     }
+
+    object RecordDetails : NavDestinations("record_details/{recordId}/{recordType}") {
+        fun createRoute(recordId: String, recordType: String) = "record_details/$recordId/$recordType"
+    }
+
     object AddRecord : NavDestinations("add_record/{recordType}") {
         fun createRoute(recordType: String) = "add_record/$recordType"
     }
-    object ViewRecords : NavDestinations("view_records/{recordType}") {
-        fun createRoute(recordType: String) = "view_records/$recordType"
-    }
+
     object ManageRecords : NavDestinations("manage_records/{recordType}") {
         fun createRoute(recordType: String) = "manage_records/$recordType"
     }

@@ -59,6 +59,7 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.material3.adaptive)
     implementation(libs.material.icons.extended)
+    implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
 
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
