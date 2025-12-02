@@ -22,15 +22,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import android.graphics.BitmapFactory
-import android.util.Base64
-import androidx.compose.foundation.Image
-import androidx.compose.ui.graphics.asImageBitmap
 import kotlinx.coroutines.launch
 import pl.edu.pk.student.feature_medical_records.domain.models.MedicalRecordType
 import pl.edu.pk.student.feature_medical_records.viewmodel.MedicalRecordsViewModel
+import pl.edu.pk.student.feature_medical_records.ui.components.Base64Image
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,13 +50,11 @@ fun AddRecordScreen(
     val successMessage by viewModel.successMessage.collectAsStateWithLifecycle()
     val errorMessage by viewModel.errorMessage.collectAsStateWithLifecycle()
 
-    // Image picker launcher
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri: Uri? ->
         if (uri != null) {
             selectedImageUri = uri
-            // Konwertuj do Base64 immediately
             scope.launch {
                 viewModel.convertImageToBase64(uri).fold(
                     onSuccess = { base64 ->
@@ -74,7 +70,6 @@ fun AddRecordScreen(
         }
     }
 
-    // Obsługa sukcesu
     LaunchedEffect(successMessage) {
         successMessage?.let {
             Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
@@ -83,7 +78,6 @@ fun AddRecordScreen(
         }
     }
 
-    // Obsługa błędów
     LaunchedEffect(errorMessage) {
         errorMessage?.let {
             Toast.makeText(context, it, Toast.LENGTH_LONG).show()
@@ -94,7 +88,10 @@ fun AddRecordScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Add ${recordType.title}") },
+                title = { Text(
+                    text = "Add ${recordType.title}",
+                    fontSize = 38.sp
+                    ) },
                 navigationIcon = {
                     IconButton(onClick = onBack, enabled = !isLoading && !isUploadingImage) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
@@ -123,26 +120,49 @@ fun AddRecordScreen(
                 OutlinedTextField(
                     value = title,
                     onValueChange = { title = it },
-                    label = { Text("Title") },
-                    placeholder = { Text("Enter a title for this record") },
+                    label = { Text(
+                        text = "Title",
+                        color = MaterialTheme.colorScheme.onPrimary
+                        ) },
+                    placeholder = { Text(
+                        text = "Enter a title for this record",
+                        color = MaterialTheme.colorScheme.onPrimary
+                        ) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     enabled = !isLoading && !isUploadingImage,
-                    singleLine = true
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = MaterialTheme.colorScheme.onPrimary,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onPrimary,
+                        focusedBorderColor = MaterialTheme.colorScheme.onPrimary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary
+                    )
                 )
 
                 OutlinedTextField(
                     value = content,
                     onValueChange = { content = it },
-                    label = { Text("Content") },
-                    placeholder = { Text("Enter detailed information") },
+                    label = { Text(
+                        text = "Content",
+                        color = MaterialTheme.colorScheme.onPrimary
+                        ) },
+                    placeholder = { Text(
+                        text = "Enter detailed information",
+                        color = MaterialTheme.colorScheme.onPrimary
+                        ) },
                     modifier = Modifier.fillMaxWidth().height(200.dp),
                     shape = RoundedCornerShape(12.dp),
                     enabled = !isLoading && !isUploadingImage,
-                    maxLines = 10
+                    maxLines = 10,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = MaterialTheme.colorScheme.onPrimary,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onPrimary,
+                        focusedBorderColor = MaterialTheme.colorScheme.onPrimary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary
+                    )
                 )
 
-                // Image selection section
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
@@ -162,24 +182,19 @@ fun AddRecordScreen(
 
                         if (selectedImageUri != null) {
                             Box(modifier = Modifier.fillMaxWidth()) {
-                                // Wyświetl z URI (przed konwersją) lub z Base64 (po konwersji)
                                 if (base64Image != null) {
-                                    val imageBytes = Base64.decode(base64Image, Base64.DEFAULT)
-                                    val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
-
-                                    if (bitmap != null) {
-                                        Image(
-                                            bitmap = bitmap.asImageBitmap(),
-                                            contentDescription = "Selected image",
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .heightIn(max = 300.dp)
-                                                .clip(RoundedCornerShape(8.dp)),
-                                            contentScale = ContentScale.Crop
-                                        )
-                                    }
+                                    Base64Image(
+                                        base64String = base64Image!!,
+                                        contentDescription = "Selected image",
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .heightIn(max = 300.dp)
+                                            .clip(RoundedCornerShape(8.dp)),
+                                        contentScale = ContentScale.Crop,
+                                        showLoadingIndicator = true,
+                                        showErrorMessage = true
+                                    )
                                 } else {
-                                    // Pokazuj oryginalny URI podczas przetwarzania
                                     coil.compose.AsyncImage(
                                         model = selectedImageUri,
                                         contentDescription = "Selected image",
@@ -191,7 +206,6 @@ fun AddRecordScreen(
                                     )
                                 }
 
-                                // Remove button
                                 IconButton(
                                     onClick = {
                                         selectedImageUri = null
@@ -215,15 +229,25 @@ fun AddRecordScreen(
                                     )
                                 }
 
-                                // Upload progress
                                 if (isUploadingImage) {
                                     Box(
                                         modifier = Modifier
-                                            .fillMaxSize()
+                                            .fillMaxWidth()
+                                            .heightIn(max = 300.dp)
                                             .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.7f)),
                                         contentAlignment = Alignment.Center
                                     ) {
-                                        CircularProgressIndicator()
+                                        Column(
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                            CircularProgressIndicator()
+                                            Text(
+                                                "Processing image...",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurface
+                                            )
+                                        }
                                     }
                                 }
                             }

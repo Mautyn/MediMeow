@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import pl.edu.pk.student.feature_medical_records.data.repository.MedicalRecordsRepository
 import pl.edu.pk.student.feature_medical_records.domain.models.MedicalRecord
 import pl.edu.pk.student.feature_medical_records.domain.models.MedicalRecordType
@@ -32,6 +33,7 @@ class MedicalRecordsViewModel @Inject constructor(
 
     private val _currentRecordType = MutableStateFlow<MedicalRecordType?>(null)
     val currentRecordType: StateFlow<MedicalRecordType?> = _currentRecordType.asStateFlow()
+    private val _imageCache = mutableMapOf<String, android.graphics.Bitmap?>()
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
@@ -45,7 +47,6 @@ class MedicalRecordsViewModel @Inject constructor(
     private val _successMessage = MutableStateFlow<String?>(null)
     val successMessage: StateFlow<String?> = _successMessage.asStateFlow()
 
-    // Rekordy dla obecnie wybranego typu
     val recordsForCurrentType: StateFlow<List<MedicalRecord>> =
         _currentRecordType.value?.let { type ->
             repository.getRecordsByType(type).stateIn(
@@ -67,7 +68,6 @@ class MedicalRecordsViewModel @Inject constructor(
         )
     }
 
-    // Konwersja zdjęcia do Base64
     suspend fun convertImageToBase64(imageUri: Uri): Result<String> {
         _isUploadingImage.value = true
         return try {
@@ -81,9 +81,11 @@ class MedicalRecordsViewModel @Inject constructor(
     }
 
     fun getRecordById(type: MedicalRecordType, id: String): Flow<MedicalRecord?> {
-        return getRecordsFlow(type).map { list ->
-            list.find { it.id == id }
-        }.distinctUntilChanged()
+        return getRecordsFlow(type)
+            .map { records ->
+                records.find { it.id == id }
+            }
+            .distinctUntilChanged()
     }
 
     fun addRecord(
@@ -158,6 +160,37 @@ class MedicalRecordsViewModel @Inject constructor(
                 }
             )
         }
+    }
+
+    suspend fun getDecodedImage(base64String: String): Result<android.graphics.Bitmap?> {
+        return withContext(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                _imageCache[base64String]?.let {
+                    return@withContext Result.success(it)
+                }
+
+                val imageBytes = android.util.Base64.decode(base64String, android.util.Base64.DEFAULT)
+                val bitmap = android.graphics.BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+
+                if (bitmap != null) {
+                    _imageCache[base64String] = bitmap
+                }
+
+                Result.success(bitmap)
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
+    }
+
+    fun clearImageCache() {
+        _imageCache.values.forEach { it?.recycle() }
+        _imageCache.clear()
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        clearImageCache()
     }
 
     fun clearMessages() {

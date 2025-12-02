@@ -1,6 +1,7 @@
 package pl.edu.pk.student.feature_medical_records.ui
 
 import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -10,6 +11,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import pl.edu.pk.student.feature_medical_records.domain.models.MedicalRecord
@@ -37,18 +40,15 @@ fun MedicalRecordDetailScreen(
 ) {
     val context = LocalContext.current
 
-    // Ustaw aktualny typ rekordu w ViewModel
     LaunchedEffect(recordType) {
         viewModel.setCurrentRecordType(recordType)
     }
 
-    // Pobierz rekordy dla danego typu
     val records by viewModel.getRecordsFlow(recordType).collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val errorMessage by viewModel.errorMessage.collectAsStateWithLifecycle()
     val successMessage by viewModel.successMessage.collectAsStateWithLifecycle()
 
-    // Obsługa komunikatów
     LaunchedEffect(errorMessage) {
         errorMessage?.let {
             Toast.makeText(context, it, Toast.LENGTH_LONG).show()
@@ -66,7 +66,10 @@ fun MedicalRecordDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(recordType.title) },
+                title = { Text(
+                    text = recordType.title,
+                    fontSize = 38.sp
+                    ) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
@@ -80,6 +83,9 @@ fun MedicalRecordDetailScreen(
         },
         floatingActionButton = {
             FloatingActionButton(
+                modifier = Modifier
+                    .padding(32.dp)
+                    .size(64.dp),
                 onClick = onAddRecord,
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary
@@ -93,11 +99,10 @@ fun MedicalRecordDetailScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            // Header z opisem i przyciskiem Manage
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
+                    .padding(32.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
@@ -117,7 +122,15 @@ fun MedicalRecordDetailScreen(
                 OutlinedButton(
                     onClick = onManageRecords,
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                        containerColor = MaterialTheme.colorScheme.background,
+                    ),
+                    border = BorderStroke(
+                        width = 2.dp,
+                        color = MaterialTheme.colorScheme.primary
+                    )
                 ) {
                     Icon(Icons.Default.Edit, "Manage")
                     Spacer(Modifier.width(8.dp))
@@ -130,7 +143,6 @@ fun MedicalRecordDetailScreen(
                 color = MaterialTheme.colorScheme.outlineVariant
             )
 
-            // Lista rekordów
             if (isLoading) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -147,7 +159,7 @@ fun MedicalRecordDetailScreen(
                 ) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                        verticalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
                         Icon(
                             recordType.icon,
@@ -170,7 +182,12 @@ fun MedicalRecordDetailScreen(
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
+                    contentPadding = PaddingValues(
+                        start = 16.dp,
+                        end = 16.dp,
+                        top = 16.dp,
+                        bottom = 140.dp
+                    ),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     item {
@@ -243,6 +260,14 @@ private fun RecordCard(record: MedicalRecord, onClick: () -> Unit) {
                     dateFormat.format(Date(record.timestamp)),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(0.5f)
+                )
+            }
+            if (record.imageUri != null) {
+                Icon(
+                    Icons.Default.Image,
+                    contentDescription = "Has image",
+                    modifier = Modifier.size(20.dp),
+                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
                 )
             }
         }

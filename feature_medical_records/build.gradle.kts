@@ -58,16 +58,13 @@ dependencies {
     implementation(libs.material.icons.extended)
     implementation(libs.material3.adaptive)
 
-    // Firebase
-    implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
-    implementation("com.google.firebase:firebase-firestore-ktx")
+    implementation(platform(libs.firebase.bom.v3270))
+    implementation(libs.google.firebase.firestore.ktx)
     implementation(libs.firebase.auth)
 
-    // Coroutines
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
+    implementation(libs.kotlinx.coroutines.play.services.v173)
 
-    // Coil for temporary image preview (before Base64 conversion)
-    implementation("io.coil-kt:coil-compose:2.5.0")
+    implementation(libs.coil.compose)
 
     implementation(libs.hilt.android)
     implementation(libs.hilt.navigation.compose)

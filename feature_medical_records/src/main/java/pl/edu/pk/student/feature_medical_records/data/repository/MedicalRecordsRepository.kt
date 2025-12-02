@@ -32,16 +32,14 @@ class MedicalRecordsRepository @Inject constructor(
     private fun getRecordsCollection(userId: String) =
         firestore.collection("users").document(userId).collection("medical_records")
 
-    // Konwersja Uri do Base64 (z kompresją)
-    suspend fun convertImageToBase64(imageUri: Uri): Result<String> {
+    fun convertImageToBase64(imageUri: Uri): Result<String> {
         return try {
             val inputStream = context.contentResolver.openInputStream(imageUri)
             val bitmap = BitmapFactory.decodeStream(inputStream)
             inputStream?.close()
 
-            // Kompresja obrazu
             val outputStream = ByteArrayOutputStream()
-            val maxSize = 800 // max szerokość/wysokość
+            val maxSize = 800
 
             val ratio = Math.min(
                 maxSize.toFloat() / bitmap.width,
@@ -66,7 +64,6 @@ class MedicalRecordsRepository @Inject constructor(
         }
     }
 
-    // Dodanie nowego rekordu
     suspend fun addRecord(record: MedicalRecord): Result<Unit> {
         return try {
             val userId = getCurrentUserId()
@@ -75,7 +72,7 @@ class MedicalRecordsRepository @Inject constructor(
                 "type" to record.type.name,
                 "title" to record.title,
                 "content" to record.content,
-                "imageBase64" to record.imageUri, // Teraz to Base64, nie URL
+                "imageBase64" to record.imageUri,
                 "timestamp" to record.timestamp,
                 "createdAt" to com.google.firebase.Timestamp.now()
             )
@@ -91,7 +88,6 @@ class MedicalRecordsRepository @Inject constructor(
         }
     }
 
-    // Pobieranie rekordów danego typu (real-time updates)
     fun getRecordsByType(type: MedicalRecordType): Flow<List<MedicalRecord>> = callbackFlow {
         val userId = getCurrentUserId()
 
@@ -111,7 +107,7 @@ class MedicalRecordsRepository @Inject constructor(
                             type = MedicalRecordType.valueOf(doc.getString("type") ?: "TEST_RESULTS"),
                             title = doc.getString("title") ?: "",
                             content = doc.getString("content"),
-                            imageUri = doc.getString("imageBase64"), // Base64 string
+                            imageUri = doc.getString("imageBase64"),
                             timestamp = doc.getLong("timestamp") ?: System.currentTimeMillis()
                         )
                     } catch (e: Exception) {
@@ -125,7 +121,6 @@ class MedicalRecordsRepository @Inject constructor(
         awaitClose { listener.remove() }
     }
 
-    // Aktualizacja rekordu
     suspend fun updateRecord(record: MedicalRecord): Result<Unit> {
         return try {
             val userId = getCurrentUserId()
@@ -147,7 +142,7 @@ class MedicalRecordsRepository @Inject constructor(
         }
     }
 
-    // Usunięcie rekordu
+
     suspend fun deleteRecord(recordId: String): Result<Unit> {
         return try {
             val userId = getCurrentUserId()

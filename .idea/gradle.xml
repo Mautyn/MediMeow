@@ -19,6 +19,7 @@
             <option value="$PROJECT_DIR$/feature_medicine_search" />
             <option value="$PROJECT_DIR$/feature_profile" />
             <option value="$PROJECT_DIR$/feature_settings" />
+            <option value="$PROJECT_DIR$/feature_share" />
           </set>
         </option>
       </GradleProjectSettings>

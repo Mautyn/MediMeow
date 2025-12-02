@@ -43,10 +43,9 @@ data class BottomNavItem(
 fun MainScreen(
     onNavigateToMedicalRecords: () -> Unit,
     onNavigateToChangePassword: () -> Unit,
-    onSignOut: () -> Unit
+    onSignOut: () -> Unit,
+    bottomNavController: NavHostController = rememberNavController() // Dodaj parametr dla własnego NavController
 ) {
-    val navController = rememberNavController()
-
     val items = listOf(
         BottomNavItem(
             route = "dashboard",
@@ -75,7 +74,7 @@ fun MainScreen(
                 containerColor = MaterialTheme.colorScheme.surface,
                 contentColor = MaterialTheme.colorScheme.primary
             ) {
-                val navBackStackEntry by navController.currentBackStackEntryAsState()
+                val navBackStackEntry by bottomNavController.currentBackStackEntryAsState()
                 val currentDestination = navBackStackEntry?.destination
 
                 items.forEach { item ->
@@ -86,8 +85,8 @@ fun MainScreen(
                     NavigationBarItem(
                         selected = isSelected,
                         onClick = {
-                            navController.navigate(item.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
+                            bottomNavController.navigate(item.route) {
+                                popUpTo(bottomNavController.graph.findStartDestination().id) {
                                     saveState = true
                                 }
                                 launchSingleTop = true
@@ -119,7 +118,7 @@ fun MainScreen(
         }
     ) { innerPadding ->
         NavHost(
-            navController = navController,
+            navController = bottomNavController,
             startDestination = "dashboard",
             modifier = Modifier
                 .fillMaxSize()

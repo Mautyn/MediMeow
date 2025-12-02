@@ -4,11 +4,19 @@ import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -102,6 +110,7 @@ fun AppNavigator(
         composable(NavDestinations.Main.route) {
             MainScreen(
                 onNavigateToMedicalRecords = {
+                    // Używamy głównego navController z AppNavigator
                     navController.navigate(NavDestinations.MedicalRecordsMenu.route)
                 },
                 onNavigateToChangePassword = {
@@ -157,32 +166,45 @@ fun AppNavigator(
             val recordId = backStackEntry.arguments?.getString("recordId") ?: ""
             val recordTypeName = backStackEntry.arguments?.getString("recordType")
             val recordType = MedicalRecordType.valueOf(recordTypeName ?: "TEST_RESULTS")
-            val lifecycleOwner = LocalLifecycleOwner.current
-
 
             val viewModel: pl.edu.pk.student.feature_medical_records.viewmodel.MedicalRecordsViewModel =
                 androidx.hilt.navigation.compose.hiltViewModel()
 
-            val recordState by viewModel
-                .getRecordById(recordType, recordId)
-                .collectAsStateWithLifecycle(initialValue = null,
-                    lifecycle = lifecycleOwner.lifecycle)
+            val recordFlow = remember(recordType, recordId) {
+                viewModel.getRecordById(recordType, recordId)
+            }
+
+            val recordState by recordFlow.collectAsStateWithLifecycle(
+                initialValue = null,
+                minActiveState = androidx.lifecycle.Lifecycle.State.STARTED
+            )
 
             when (val record = recordState) {
                 null -> {
-                    androidx.compose.foundation.layout.Box(
-                        modifier = androidx.compose.ui.Modifier.fillMaxSize(),
-                        contentAlignment = androidx.compose.ui.Alignment.Center
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
                     ) {
-                        CircularProgressIndicator()
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            CircularProgressIndicator()
+                            Text(
+                                "Loading record...",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+                            )
+                        }
                     }
                 }
-
                 else -> {
-                    RecordDetailsScreen(
-                        record = record,
-                        onBack = { navController.popBackStack() }
-                    )
+                    androidx.compose.runtime.key(record.id) {
+                        RecordDetailsScreen(
+                            record = record,
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
                 }
             }
         }
