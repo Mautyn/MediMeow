@@ -53,12 +53,10 @@ android {
 }
 
 dependencies {
-    // Core and AndroidX
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
 
-    // Feature modules
     implementation(project(":core"))
     implementation(project(":feature_auth"))
     implementation(project(":feature_dashboard"))
@@ -66,7 +64,6 @@ dependencies {
     implementation(project(":feature_profile"))
     implementation(project(":feature_settings"))
 
-    // Jetpack Compose
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
@@ -77,20 +74,17 @@ dependencies {
     implementation(libs.material.icons.extended)
     implementation(libs.material3.adaptive)
 
-    // Dependency Injection - Hilt
     implementation(libs.firebase.auth)
     implementation(libs.hilt.android)
     implementation(libs.hilt.navigation.compose)
     ksp(libs.hilt.android.compiler)
 
-    // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
 
-    // Debugging
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 }
