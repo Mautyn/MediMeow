@@ -43,8 +43,9 @@ data class BottomNavItem(
 fun MainScreen(
     onNavigateToMedicalRecords: () -> Unit,
     onNavigateToChangePassword: () -> Unit,
+    onNavigateToShare: () -> Unit,
     onSignOut: () -> Unit,
-    bottomNavController: NavHostController = rememberNavController() // Dodaj parametr dla własnego NavController
+    bottomNavController: NavHostController = rememberNavController()
 ) {
     val items = listOf(
         BottomNavItem(
@@ -135,9 +136,7 @@ fun MainScreen(
                             DashboardAction.CheckInteractions -> {
                                 // TODO: Navigate to interactions when implemented
                             }
-                            DashboardAction.SharePrescription -> {
-                                // TODO: Navigate to share when implemented
-                            }
+                            DashboardAction.SharePrescription -> onNavigateToShare()
                         }
                     }
                 )

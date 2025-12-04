@@ -30,6 +30,9 @@ sealed class NavDestinations(val route: String) {
         fun createRoute(recordType: String) = "manage_records/$recordType"
     }
 
+    // Share
+    object Share : NavDestinations("share")
+
     // Profile
     object Profile : NavDestinations("profile")
     object ChangePassword : NavDestinations("change_password")

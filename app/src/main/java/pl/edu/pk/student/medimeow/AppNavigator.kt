@@ -33,6 +33,7 @@ import pl.edu.pk.student.feature_medical_records.ui.MedicalRecordsMenuScreen
 import pl.edu.pk.student.feature_medical_records.ui.MedicalRecordDetailScreen
 import pl.edu.pk.student.feature_medical_records.ui.AddRecordScreen
 import pl.edu.pk.student.feature_medical_records.ui.RecordDetailsScreen
+import pl.edu.pk.student.feature_share.ui.ShareScreen
 import pl.edu.pk.student.medimeow.navigation.MainScreen
 import pl.edu.pk.student.medimeow.navigation.NavDestinations
 
@@ -110,11 +111,13 @@ fun AppNavigator(
         composable(NavDestinations.Main.route) {
             MainScreen(
                 onNavigateToMedicalRecords = {
-                    // Używamy głównego navController z AppNavigator
                     navController.navigate(NavDestinations.MedicalRecordsMenu.route)
                 },
                 onNavigateToChangePassword = {
                     navController.navigate(NavDestinations.ChangePassword.route)
+                },
+                onNavigateToShare = {
+                    navController.navigate(NavDestinations.Share.route)
                 },
                 onSignOut = onSignOut
             )
@@ -231,6 +234,13 @@ fun AppNavigator(
 
             ManageRecordsScreen(
                 recordType = recordType,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        // =============== SHARE FLOW ===============
+        composable(NavDestinations.Share.route) {
+            ShareScreen(
                 onBack = { navController.popBackStack() }
             )
         }
