@@ -86,7 +86,6 @@ fun AppNavigator(
                     )
         }
     ) {
-        // =============== AUTH FLOW ===============
         composable(NavDestinations.Login.route) {
             LoginScreen(
                 onNavigateToSignup = {
@@ -107,7 +106,6 @@ fun AppNavigator(
             )
         }
 
-        // =============== MAIN APP ===============
         composable(NavDestinations.Main.route) {
             MainScreen(
                 onNavigateToMedicalRecords = {
@@ -119,11 +117,13 @@ fun AppNavigator(
                 onNavigateToShare = {
                     navController.navigate(NavDestinations.Share.route)
                 },
+                onNavigateToInteractions = {
+                    navController.navigate(NavDestinations.Interactions.route)
+                },
                 onSignOut = onSignOut
             )
         }
 
-        // =============== MEDICAL RECORDS FLOW ===============
         composable(NavDestinations.MedicalRecordsMenu.route) {
             MedicalRecordsMenuScreen(
                 onBack = { navController.popBackStack() },
@@ -238,16 +238,20 @@ fun AppNavigator(
             )
         }
 
-        // =============== SHARE FLOW ===============
         composable(NavDestinations.Share.route) {
             ShareScreen(
                 onBack = { navController.popBackStack() }
             )
         }
 
-        // =============== PROFILE FLOW ===============
         composable(NavDestinations.ChangePassword.route) {
             PasswordChangeScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(NavDestinations.Interactions.route) {
+            pl.edu.pk.student.feature_interactions.ui.screens.InteractionsScreen(
                 onBack = { navController.popBackStack() }
             )
         }

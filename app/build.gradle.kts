@@ -64,6 +64,7 @@ dependencies {
     implementation(project(":feature_profile"))
     implementation(project(":feature_settings"))
     implementation(project(":feature_share"))
+    implementation(project(":feature_interactions"))
 
 
     implementation(platform(libs.androidx.compose.bom))

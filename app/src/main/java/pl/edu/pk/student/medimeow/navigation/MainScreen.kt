@@ -44,6 +44,7 @@ fun MainScreen(
     onNavigateToMedicalRecords: () -> Unit,
     onNavigateToChangePassword: () -> Unit,
     onNavigateToShare: () -> Unit,
+    onNavigateToInteractions: () -> Unit,
     onSignOut: () -> Unit,
     bottomNavController: NavHostController = rememberNavController()
 ) {
@@ -133,9 +134,7 @@ fun MainScreen(
                             DashboardAction.SearchMedicine -> {
                                 // TODO: Navigate to medicine search when implemented
                             }
-                            DashboardAction.CheckInteractions -> {
-                                // TODO: Navigate to interactions when implemented
-                            }
+                            DashboardAction.CheckInteractions -> onNavigateToInteractions()
                             DashboardAction.SharePrescription -> onNavigateToShare()
                         }
                     }
