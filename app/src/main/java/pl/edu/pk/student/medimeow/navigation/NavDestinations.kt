@@ -35,4 +35,5 @@ sealed class NavDestinations(val route: String) {
 
     object Interactions : NavDestinations("interactions")
 
+    object MedicineAvailability : NavDestinations("medicine_availability")
 }

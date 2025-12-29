@@ -59,8 +59,9 @@ dependencies {
     implementation(libs.material.icons.extended)
     implementation(libs.material3.adaptive)
 
-    implementation(platform(libs.firebase.bom.v3270))
-    implementation(libs.google.firebase.firestore.ktx)
+    implementation(libs.firebase.firestore.ktx)
+    implementation(libs.firebase.auth)
+    implementation(libs.kotlinx.coroutines.play.services)
     implementation(libs.firebase.auth)
 
     implementation(libs.hilt.android)

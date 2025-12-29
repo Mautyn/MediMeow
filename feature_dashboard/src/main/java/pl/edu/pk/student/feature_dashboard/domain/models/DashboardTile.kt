@@ -2,6 +2,7 @@ package pl.edu.pk.student.feature_dashboard.domain.models
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Assignment
+import androidx.compose.material.icons.filled.LocalPharmacy
 import androidx.compose.material.icons.filled.Medication
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
@@ -16,20 +17,20 @@ data class DashboardTile(
 )
 
 sealed class DashboardAction {
-    object SearchMedicine : DashboardAction()
     object CheckInteractions : DashboardAction()
     object AddMedicalRecord : DashboardAction()
     object SharePrescription : DashboardAction()
+    object MedicineAvailability : DashboardAction()
 }
 
 object DashboardTiles {
     val tiles = listOf(
         DashboardTile(
-            id = "search_medicine",
-            title = "Search Medicine",
-            description = "Find medicine availability",
-            icon = Icons.Default.Search,
-            action = DashboardAction.SearchMedicine
+            id = "medicine_availability",
+            title = "Medicine Availability",
+            description = "Check medicine availability in nearby pharmacies",
+            icon = Icons.Default.LocalPharmacy,
+            action = DashboardAction.MedicineAvailability
         ),
         DashboardTile(
             id = "check_interactions",

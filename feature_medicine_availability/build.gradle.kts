@@ -9,7 +9,7 @@ plugins {
 }
 
 android {
-    namespace = "pl.edu.pk.student.feature_medicine_search"
+    namespace = "pl.edu.pk.student.feature_medical_records"
     compileSdk = 36
 
     defaultConfig {
@@ -58,6 +58,13 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.material.icons.extended)
     implementation(libs.material3.adaptive)
+
+    implementation(libs.firebase.firestore.ktx)
+    implementation(libs.firebase.auth)
+
+    implementation(libs.kotlinx.coroutines.play.services)
+
+    implementation(libs.coil.compose)
 
     implementation(libs.hilt.android)
     implementation(libs.hilt.navigation.compose)

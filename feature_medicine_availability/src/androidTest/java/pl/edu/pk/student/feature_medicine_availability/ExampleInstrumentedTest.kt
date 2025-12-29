@@ -1,4 +1,4 @@
-package pl.edu.pk.student.feature_medicine_search
+package pl.edu.pk.student.feature_medicine_availability
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4

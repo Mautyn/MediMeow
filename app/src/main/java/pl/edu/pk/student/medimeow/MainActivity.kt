@@ -6,8 +6,10 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.rememberNavController
+import com.google.firebase.firestore.FirebaseFirestore
 import dagger.hilt.android.AndroidEntryPoint
 import pl.edu.pk.student.core.ui.theme.MediMeowTheme
 import pl.edu.pk.student.medimeow.viewmodel.MainViewModel
@@ -20,13 +22,14 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        val content: View = findViewById(android.R.id.content)
+            val content: View = findViewById(android.R.id.content)
         content.viewTreeObserver.addOnPreDrawListener {
             mainViewModel.authState.value != AuthState.Loading
         }
 
         setContent {
             val isDarkMode = mainViewModel.isDarkMode.collectAsStateWithLifecycle().value
+
 
             MediMeowTheme(darkTheme = isDarkMode) {
                 val navController = rememberNavController()

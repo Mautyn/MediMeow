@@ -64,6 +64,7 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     implementation(libs.hilt.android)
+
     implementation(libs.firebase.auth)
     ksp(libs.hilt.android.compiler)
 }

@@ -30,7 +30,7 @@ import pl.edu.pk.student.feature_dashboard.ui.components.DashboardTileComponent
 
 @Composable
 fun DashboardScreen(
-    onTileClick: (DashboardAction) -> Unit = {}
+    onTileClick: (DashboardAction) -> Unit = {},
 ) {
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
     val deviceConfiguration = DeviceConfiguration.fromWindowSizeClass(windowSizeClass)

@@ -65,7 +65,7 @@ dependencies {
     implementation(project(":feature_settings"))
     implementation(project(":feature_share"))
     implementation(project(":feature_interactions"))
-
+    implementation(project(":feature_medicine_availability"))
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
@@ -77,7 +77,11 @@ dependencies {
     implementation(libs.material.icons.extended)
     implementation(libs.material3.adaptive)
 
+    implementation(libs.firebase.firestore.ktx)
     implementation(libs.firebase.auth)
+
+    implementation(libs.kotlinx.coroutines.play.services)
+
     implementation(libs.hilt.android)
     implementation(libs.hilt.navigation.compose)
     ksp(libs.hilt.android.compiler)

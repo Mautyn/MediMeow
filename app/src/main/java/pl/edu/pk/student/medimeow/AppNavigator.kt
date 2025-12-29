@@ -120,6 +120,9 @@ fun AppNavigator(
                 onNavigateToInteractions = {
                     navController.navigate(NavDestinations.Interactions.route)
                 },
+                onNavigateToMedicineAvailability = {
+                    navController.navigate(NavDestinations.MedicineAvailability.route)
+                },
                 onSignOut = onSignOut
             )
         }
@@ -252,6 +255,12 @@ fun AppNavigator(
 
         composable(NavDestinations.Interactions.route) {
             pl.edu.pk.student.feature_interactions.ui.screens.InteractionsScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(NavDestinations.MedicineAvailability.route) {
+            pl.edu.pk.student.feature_medicine_availability.ui.MedicineAvailabilityScreen(
                 onBack = { navController.popBackStack() }
             )
         }
