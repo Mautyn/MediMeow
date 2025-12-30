@@ -69,20 +69,6 @@ class ShareRepository @Inject constructor(
         }
     }
 
-    fun shareXRayRecord(record: MedicalRecord): ShareResult {
-        val shareText = """
-        X-Ray: ${record.title}
-        Date: ${formatTimestamp(record.timestamp)}
-        View: ${record.externalImageUrl}
-    """.trimIndent()
-
-        val intent = Intent(Intent.ACTION_SEND).apply {
-            type = "text/plain"
-            putExtra(Intent.EXTRA_TEXT, shareText)
-        }
-
-        return ShareResult.Success(Intent.createChooser(intent, "Share X-Ray"))
-    }
 
     private fun createTextShare(items: List<ShareableItem>): ShareResult {
         val text = if (items.size == 1) {
@@ -199,7 +185,6 @@ class ShareRepository @Inject constructor(
         val margin = 40f
         val pageWidth = canvas.width - 2 * margin
 
-        // Header
         canvas.drawRect(margin, yPosition, canvas.width - margin, yPosition + 60f, Paint().apply {
             color = Color.parseColor("#2d758d")
         })
@@ -212,15 +197,12 @@ class ShareRepository @Inject constructor(
         paint.color = Color.BLACK
         paint.textSize = 12f
 
-        // Title
         canvas.drawText("Title: ${item.title}", margin, yPosition, titlePaint)
         yPosition += 30f
 
-        // Date
         canvas.drawText("Date: ${formatTimestamp(item.timestamp)}", margin, yPosition, paint)
         yPosition += 30f
 
-        // Content
         if (item.content != null) {
             canvas.drawText("Content:", margin, yPosition, titlePaint)
             yPosition += 25f
@@ -234,7 +216,7 @@ class ShareRepository @Inject constructor(
             }
         }
 
-        // Image
+
         if (includeImages && item.imageUri != null) {
             yPosition += 20f
             canvas.drawText("Image attached", margin, yPosition, paint)

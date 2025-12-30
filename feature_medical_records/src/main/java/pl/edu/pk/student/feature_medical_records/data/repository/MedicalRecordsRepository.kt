@@ -179,14 +179,65 @@ class MedicalRecordsRepository @Inject constructor(
             val userId = getCurrentUserId()
 
             val collectionName = if (type == MedicalRecordType.XRAY) {
-                "medicalRecords"
+                "medicalRecords"  // camelCase dla X-Ray
             } else {
-                "medical_records"
+                "medical_records"  // snake_case dla innych
+            }
+
+            Log.d("MedicalRecordsRepo", "=== Deleting record ===")
+            Log.d("MedicalRecordsRepo", "Record ID: $recordId")
+            Log.d("MedicalRecordsRepo", "Type: ${type.name}")
+            Log.d("MedicalRecordsRepo", "Collection: $collectionName")
+
+            val doc = firestore.collection("users")
+                .document(userId)
+                .collection(collectionName)
+                .document(recordId)
+                .get()
+                .await()
+
+            val supabaseStoragePath = doc.getString("supabaseStoragePath")
+
+            if (supabaseStoragePath != null) {
+                Log.d("MedicalRecordsRepo", "Found Supabase file: $supabaseStoragePath")
+
+                val deleteResult = supabaseStorageService.deleteFile(supabaseStoragePath)
+
+                deleteResult.fold(
+                    onSuccess = {
+                        Log.d("MedicalRecordsRepo", "Supabase file deleted successfully")
+                    },
+                    onFailure = { error ->
+                        Log.e("MedicalRecordsRepo", "Failed to delete Supabase file: ${error.message}", error)
+                    }
+                )
+            } else {
+                Log.d("MedicalRecordsRepo", "No Supabase file to delete")
             }
 
             firestore.collection("users")
                 .document(userId)
                 .collection(collectionName)
+                .document(recordId)
+                .delete()
+                .await()
+
+            Log.d("MedicalRecordsRepo", "Firestore document deleted successfully")
+            Result.success(Unit)
+
+        } catch (e: Exception) {
+            Log.e("MedicalRecordsRepo", "Delete failed: ${e.message}", e)
+            Result.failure(e)
+        }
+    }
+
+    suspend fun deleteRecord(recordId: String): Result<Unit> {
+        return try {
+            val userId = getCurrentUserId()
+
+            firestore.collection("users")
+                .document(userId)
+                .collection("medical_records")
                 .document(recordId)
                 .delete()
                 .await()
@@ -253,36 +304,6 @@ class MedicalRecordsRepository @Inject constructor(
         }
     }
 
-
-    suspend fun deleteRecordWithSupabaseImage(recordId: String): Result<Unit> = withContext(Dispatchers.IO) {
-        try {
-            val userId = getCurrentUserId()
-
-            val doc = firestore.collection("users")
-                .document(userId)
-                .collection("medicalRecords")
-                .document(recordId)
-                .get()
-                .await()
-
-            val storagePath = doc.getString("supabaseStoragePath")
-
-            if (storagePath != null) {
-                supabaseStorageService.deleteFile(storagePath)
-            }
-
-            firestore.collection("users")
-                .document(userId)
-                .collection("medicalRecords")
-                .document(recordId)
-                .delete()
-                .await()
-
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
 
 
     suspend fun refreshSignedUrl(recordId: String): Result<String> = withContext(Dispatchers.IO) {

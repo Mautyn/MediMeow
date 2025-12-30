@@ -25,7 +25,7 @@ import javax.inject.Inject
 
 data class ShareUiState(
     val availableRecords: List<ShareableItem> = emptyList(),
-    val xrayRecords: List<MedicalRecord> = emptyList(),  // ← DODAJ
+    val xrayRecords: List<MedicalRecord> = emptyList(),
     val selectedRecords: Set<String> = emptySet(),
     val selectedFormat: ShareFormat = ShareFormat.Html,
     val includeImages: Boolean = true,
@@ -54,10 +54,8 @@ class ShareViewModel @Inject constructor(
     private val prescriptionsFlow = medicalRecordsRepository.getRecordsByType(MedicalRecordType.PRESCRIPTIONS)
     private val recommendationsFlow = medicalRecordsRepository.getRecordsByType(MedicalRecordType.DOCTOR_RECOMMENDATIONS)
 
-    // ← DODAJ X-RAY FLOW
     private val xrayFlow = medicalRecordsRepository.getRecordsByType(MedicalRecordType.XRAY)
 
-    // Combine all flows (BEZ X-Ray)
     val allRecords: StateFlow<List<ShareableItem>> = combine(
         testResultsFlow,
         prescriptionsFlow,
@@ -77,7 +75,6 @@ class ShareViewModel @Inject constructor(
     )
 
     init {
-        // Collect medical records (bez X-Ray)
         viewModelScope.launch {
             allRecords.collect { records ->
                 val filteredRecords = if (_uiState.value.filterType != null) {
@@ -93,7 +90,6 @@ class ShareViewModel @Inject constructor(
             }
         }
 
-        // ← DODAJ Collect X-Ray records
         viewModelScope.launch {
             xrayFlow.collect { xrays ->
                 _uiState.value = _uiState.value.copy(
@@ -132,7 +128,6 @@ class ShareViewModel @Inject constructor(
     }
 
     fun setFilterType(type: MedicalRecordType?) {
-        // ← BLOKUJ X-RAY w filtrze
         if (type == MedicalRecordType.XRAY) {
             _events.value = ShareEvent.ShareError("X-Ray images can only be shared individually from the X-Ray section below")
             return
@@ -184,7 +179,6 @@ class ShareViewModel @Inject constructor(
         }
     }
 
-    // ← DODAJ metodę do sharowania X-Ray
     fun shareXRayWithDoctor(record: MedicalRecord, context: android.content.Context) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)

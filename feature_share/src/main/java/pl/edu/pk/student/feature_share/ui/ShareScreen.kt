@@ -134,7 +134,6 @@ fun ShareScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            // Options section
 
                 Column(
                     modifier = Modifier.padding(16.dp),
@@ -238,7 +237,6 @@ fun ShareScreen(
             }
 
 
-            // Records list
             if (uiState.availableRecords.isEmpty()) {
                 Box(
                     modifier = Modifier

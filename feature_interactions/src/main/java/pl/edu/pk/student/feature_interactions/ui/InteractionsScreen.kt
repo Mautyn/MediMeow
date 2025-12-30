@@ -1,4 +1,4 @@
-package pl.edu.pk.student.feature_interactions.ui.screens
+package pl.edu.pk.student.feature_interactions.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box

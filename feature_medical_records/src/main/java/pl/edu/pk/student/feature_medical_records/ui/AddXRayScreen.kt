@@ -36,13 +36,11 @@ fun AddXRayScreen(
     val successMessage by viewModel.successMessage.collectAsStateWithLifecycle()
     val errorMessage by viewModel.errorMessage.collectAsStateWithLifecycle()
 
-    // File picker dla dowolnych plików (DICOM, JPG, PNG, etc.)
     val filePicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let {
             selectedFileUri = it
-            // Pobierz nazwę pliku
             val cursor = context.contentResolver.query(it, null, null, null, null)
             cursor?.use {
                 if (it.moveToFirst()) {
@@ -58,7 +56,6 @@ fun AddXRayScreen(
         }
     }
 
-    // Obsługa success
     LaunchedEffect(successMessage) {
         successMessage?.let {
             Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
@@ -67,7 +64,6 @@ fun AddXRayScreen(
         }
     }
 
-    // Obsługa error
     LaunchedEffect(errorMessage) {
         errorMessage?.let {
             Toast.makeText(context, it, Toast.LENGTH_LONG).show()
@@ -100,7 +96,6 @@ fun AddXRayScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Title field
             OutlinedTextField(
                 value = title,
                 onValueChange = { title = it },
@@ -112,7 +107,6 @@ fun AddXRayScreen(
                 shape = RoundedCornerShape(12.dp)
             )
 
-            // File selection
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
@@ -177,7 +171,6 @@ fun AddXRayScreen(
                 }
             }
 
-            // Upload state
             when (val state = uploadState) {
                 is XRayUploadState.Uploading -> {
                     Card(

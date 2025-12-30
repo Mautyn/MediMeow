@@ -1,6 +1,7 @@
 package pl.edu.pk.student.feature_medical_records.viewmodel
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -37,7 +38,13 @@ class MedicalRecordsViewModel @Inject constructor(
 
     private val _currentRecordType = MutableStateFlow<MedicalRecordType?>(null)
     val currentRecordType: StateFlow<MedicalRecordType?> = _currentRecordType.asStateFlow()
-    private val _imageCache = mutableMapOf<String, android.graphics.Bitmap?>()
+    private val _imageCache = object : LinkedHashMap<String, Bitmap?>(
+        16, 0.75f, true
+    ) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Bitmap?>?): Boolean {
+            return size > 50  // Max 50 obrazków w cache
+        }
+    }
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
@@ -149,12 +156,31 @@ class MedicalRecordsViewModel @Inject constructor(
         }
     }
 
+
     fun deleteRecord(recordId: String, type: MedicalRecordType) {
         viewModelScope.launch {
             _isLoading.value = true
             _errorMessage.value = null
 
             repository.deleteRecord(recordId, type).fold(
+                onSuccess = {
+                    _successMessage.value = "Record deleted successfully"
+                    _isLoading.value = false
+                },
+                onFailure = { error ->
+                    _errorMessage.value = "Failed to delete record: ${error.message}"
+                    _isLoading.value = false
+                }
+            )
+        }
+    }
+
+    fun deleteRecord(recordId: String) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _errorMessage.value = null
+
+            repository.deleteRecord(recordId).fold(
                 onSuccess = {
                     _successMessage.value = "Record deleted successfully"
                     _isLoading.value = false
@@ -223,7 +249,6 @@ class MedicalRecordsViewModel @Inject constructor(
 
                 val userId = repository.getCurrentUserId()
 
-                // Copy file to cache
                 val inputStream = context.contentResolver.openInputStream(fileUri)
                     ?: throw Exception("Cannot open file")
 
@@ -235,7 +260,6 @@ class MedicalRecordsViewModel @Inject constructor(
 
                 _xrayUploadState.value = XRayUploadState.Uploading(30)
 
-                // Upload to Supabase
                 val uploadResult = repository.supabaseStorageService.uploadDicomFile(
                     file = tempFile,
                     userId = userId,
@@ -246,7 +270,6 @@ class MedicalRecordsViewModel @Inject constructor(
                     onSuccess = { result ->
                         _xrayUploadState.value = XRayUploadState.Uploading(70)
 
-                        // Save to Firestore
                         val saveResult = repository.addRecordWithSupabaseImage(
                             type = MedicalRecordType.XRAY,
                             title = title,

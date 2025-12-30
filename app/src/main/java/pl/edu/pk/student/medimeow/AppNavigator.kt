@@ -257,7 +257,7 @@ fun AppNavigator(
         }
 
         composable(NavDestinations.Interactions.route) {
-            pl.edu.pk.student.feature_interactions.ui.screens.InteractionsScreen(
+            pl.edu.pk.student.feature_interactions.ui.InteractionsScreen(
                 onBack = { navController.popBackStack() }
             )
         }

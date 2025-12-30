@@ -63,7 +63,6 @@ class ChangePasswordViewModel @Inject constructor(
     fun changePassword() {
         val current = _state.value
 
-        // Clear previous errors
         _state.update {
             it.copy(
                 currentPasswordError = null,
@@ -72,13 +71,11 @@ class ChangePasswordViewModel @Inject constructor(
             )
         }
 
-        // Validate current password
         if (current.currentPassword.isBlank()) {
             _state.update { it.copy(currentPasswordError = "Current password cannot be empty") }
             return
         }
 
-        // Validate new password
         if (current.newPassword.isBlank()) {
             _state.update { it.copy(newPasswordError = "New password cannot be empty") }
             return
@@ -99,13 +96,11 @@ class ChangePasswordViewModel @Inject constructor(
             return
         }
 
-        // Validate confirm password
         if (current.confirmPassword != current.newPassword) {
             _state.update { it.copy(confirmPasswordError = "Passwords do not match") }
             return
         }
 
-        // Execute password change
         executePasswordChange()
     }
 
@@ -124,14 +119,12 @@ class ChangePasswordViewModel @Inject constructor(
         }
 
         try {
-            // Re-authenticate user
             val credential = EmailAuthProvider.getCredential(
                 user.email!!,
                 _state.value.currentPassword
             )
             user.reauthenticate(credential).await()
 
-            // Update password
             user.updatePassword(_state.value.newPassword).await()
 
             _state.update {

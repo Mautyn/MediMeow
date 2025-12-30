@@ -49,7 +49,6 @@ fun ProfileScreen(
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Profile Header
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -58,7 +57,6 @@ fun ProfileScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Avatar
             Box(
                 modifier = Modifier
                     .size(96.dp)
@@ -74,7 +72,6 @@ fun ProfileScreen(
                 )
             }
 
-            // User Info
             Text(
                 text = currentUser?.email ?: "Not logged in",
                 style = MaterialTheme.typography.titleMedium,
@@ -92,7 +89,6 @@ fun ProfileScreen(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Profile Actions
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -116,7 +112,6 @@ fun ProfileScreen(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Sign Out Section
         Column(
             modifier = Modifier
                 .fillMaxWidth()

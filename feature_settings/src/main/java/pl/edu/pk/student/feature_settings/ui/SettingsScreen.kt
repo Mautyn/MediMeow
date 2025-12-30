@@ -58,7 +58,6 @@ fun SettingsScreen(
                 .widthIn(max = 600.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Header
             Text(
                 text = "Settings",
                 style = MaterialTheme.typography.titleLarge,
@@ -68,7 +67,6 @@ fun SettingsScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // App Settings Section
             Text(
                 text = "App Settings",
                 style = MaterialTheme.typography.titleSmall,
@@ -117,7 +115,6 @@ fun SettingsScreen(
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             Spacer(modifier = Modifier.height(16.dp))
 
-            // General Settings Section
             Text(
                 text = "General",
                 style = MaterialTheme.typography.titleSmall,
@@ -165,7 +162,6 @@ fun SettingsScreen(
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Sign Out Button
             Button(
                 onClick = onSignOut,
                 modifier = Modifier.fillMaxWidth(),
@@ -184,7 +180,6 @@ fun SettingsScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // App Version
             Text(
                 text = "Version 1.0",
                 style = MaterialTheme.typography.bodySmall,

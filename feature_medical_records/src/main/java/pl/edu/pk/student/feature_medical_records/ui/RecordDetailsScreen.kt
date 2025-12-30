@@ -19,7 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext  // ← DODAJ TEN IMPORT
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -38,8 +38,8 @@ fun RecordDetailsScreen(
     onBack: () -> Unit,
     viewModel: MedicalRecordsViewModel = hiltViewModel()
 ) {
-    val context = LocalContext.current  // ← DODAJ TO
-    var isSharing by remember { mutableStateOf(false) }  // ← DODAJ TO
+    val context = LocalContext.current
+    var isSharing by remember { mutableStateOf(false) }
 
     val dateFormat = SimpleDateFormat("EEEE, MMM dd, yyyy 'at' HH:mm", Locale.getDefault())
     var showFullImage by remember { mutableStateOf(false) }
@@ -210,7 +210,6 @@ fun RecordDetailsScreen(
                     }
                 }
 
-                // SEKCJA SHARE - tylko jeśli jest Supabase storage path
                 if (record.supabaseStoragePath != null) {
                     Spacer(Modifier.height(16.dp))
 
@@ -276,6 +275,7 @@ fun RecordDetailsScreen(
                                         },
                                         onError = { error ->
                                             isSharing = false
+                                            Log.e("RecordDetailsScreen", "Failed to generate share link", Exception(error))
                                             Toast.makeText(context, "Error: $error", Toast.LENGTH_LONG).show()
                                         }
                                     )
