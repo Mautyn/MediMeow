@@ -16,6 +16,8 @@ enum class ShareableType(val displayName: String) {
     PRESCRIPTION("Prescription"),
     LAB_RESULT("Lab Result"),
     DOCTOR_NOTE("Doctor's Recommendation"),
+    XRAY("X-Ray Image"),
+
     MULTIPLE("Multiple Records")
 }
 

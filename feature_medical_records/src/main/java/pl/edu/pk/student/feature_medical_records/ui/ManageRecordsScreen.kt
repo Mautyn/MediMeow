@@ -137,7 +137,7 @@ fun ManageRecordsScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        viewModel.deleteRecord(record.id)
+                        viewModel.deleteRecord(record.id, record.type)
                         recordToDelete = null
                     },
                     colors = ButtonDefaults.textButtonColors(

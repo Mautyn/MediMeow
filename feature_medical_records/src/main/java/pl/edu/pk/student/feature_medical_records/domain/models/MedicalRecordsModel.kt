@@ -2,6 +2,7 @@ package pl.edu.pk.student.feature_medical_records.domain.models
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Assignment
+import androidx.compose.material.icons.filled.MedicalServices
 import androidx.compose.material.icons.filled.Medication
 import androidx.compose.material.icons.filled.Science
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -28,6 +29,11 @@ enum class MedicalRecordType(
         "Doctor's Recommendations",
         "Medical advice and recommendations",
         Icons.Default.Assignment
+    ),
+    XRAY(
+        "X-Ray Images",
+        "X-ray and DICOM medical imaging",
+        Icons.Default.MedicalServices
     )
 }
 
@@ -37,17 +43,29 @@ data class MedicalRecord(
     override val title: String,
     override val content: String? = null,
     override val imageUri: String? = null,
+
+    val supabaseStoragePath: String? = null,
+    val supabasePublicUrl: String? = null,
+    val supabaseSignedUrl: String? = null,
+    val supabaseSignedUrlExpiry: Long? = null,
+
+    val externalImageUrl: String? = null,
+    val externalImageDeleteUrl: String? = null,
+
     override val timestamp: Long = System.currentTimeMillis()
 ) : ShareableItem {
 
     val isTextRecord: Boolean get() = content != null
     val isImageRecord: Boolean get() = imageUri != null
+    val isSupabaseImage: Boolean get() = supabaseStoragePath != null
+    val isExternalImage: Boolean get() = externalImageUrl != null
 
     override fun getShareableType(): ShareableType {
         return when (type) {
             MedicalRecordType.PRESCRIPTIONS -> ShareableType.PRESCRIPTION
             MedicalRecordType.TEST_RESULTS -> ShareableType.LAB_RESULT
             MedicalRecordType.DOCTOR_RECOMMENDATIONS -> ShareableType.DOCTOR_NOTE
+            MedicalRecordType.XRAY -> ShareableType.XRAY
         }
     }
 

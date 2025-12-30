@@ -1,6 +1,8 @@
 package pl.edu.pk.student.feature_medical_records.ui
 
+import android.content.Intent
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -10,16 +12,20 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext  // ← DODAJ TEN IMPORT
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.hilt.navigation.compose.hiltViewModel
 import pl.edu.pk.student.feature_medical_records.domain.models.MedicalRecord
 import pl.edu.pk.student.feature_medical_records.ui.components.Base64Image
+import pl.edu.pk.student.feature_medical_records.viewmodel.MedicalRecordsViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -29,9 +35,11 @@ private const val TAG = "RecordDetailsScreen"
 @Composable
 fun RecordDetailsScreen(
     record: MedicalRecord,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    viewModel: MedicalRecordsViewModel = hiltViewModel()
 ) {
-    Log.d(TAG, "RecordDetailsScreen composing with record: ${record.id}")
+    val context = LocalContext.current  // ← DODAJ TO
+    var isSharing by remember { mutableStateOf(false) }  // ← DODAJ TO
 
     val dateFormat = SimpleDateFormat("EEEE, MMM dd, yyyy 'at' HH:mm", Locale.getDefault())
     var showFullImage by remember { mutableStateOf(false) }
@@ -39,8 +47,6 @@ fun RecordDetailsScreen(
     val imageKey = remember(record.id, record.imageUri) {
         "${record.id}_${record.imageUri?.hashCode() ?: "none"}"
     }
-
-    Log.d(TAG, "Image key: $imageKey, hasImage: ${record.imageUri != null}")
 
     Scaffold(
         topBar = {
@@ -203,6 +209,97 @@ fun RecordDetailsScreen(
                         }
                     }
                 }
+
+                // SEKCJA SHARE - tylko jeśli jest Supabase storage path
+                if (record.supabaseStoragePath != null) {
+                    Spacer(Modifier.height(16.dp))
+
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(
+                                    Icons.Default.Share,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSecondaryContainer
+                                )
+                                Text(
+                                    "Share with Healthcare Professional",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                                )
+                            }
+
+                            Text(
+                                "Generate a secure link to share this DICOM file. Link expires in 48 hours.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer.copy(0.7f)
+                            )
+
+                            Button(
+                                onClick = {
+                                    isSharing = true
+                                    viewModel.shareXRayWithDoctor(
+                                        record = record,
+                                        expiresInHours = 48,
+                                        onSuccess = { shareableUrl ->
+                                            isSharing = false
+
+                                            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                                type = "text/plain"
+                                                putExtra(Intent.EXTRA_SUBJECT, "Medical X-Ray: ${record.title}")
+                                                putExtra(Intent.EXTRA_TEXT, """
+                                                    DICOM X-Ray File: ${record.title}
+                                                    Date: ${SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(Date(record.timestamp))}
+                                                    
+                                                    Secure download link (expires in 48 hours):
+                                                    $shareableUrl
+                                                    
+                                                    This is a medical imaging file in DICOM format.
+                                                    View with DICOM viewer software.
+                                                """.trimIndent())
+                                            }
+                                            context.startActivity(
+                                                Intent.createChooser(shareIntent, "Share with Doctor")
+                                            )
+                                        },
+                                        onError = { error ->
+                                            isSharing = false
+                                            Toast.makeText(context, "Error: $error", Toast.LENGTH_LONG).show()
+                                        }
+                                    )
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                enabled = !isSharing
+                            ) {
+                                if (isSharing) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(20.dp),
+                                        color = MaterialTheme.colorScheme.onPrimary
+                                    )
+                                    Spacer(Modifier.width(8.dp))
+                                    Text("Generating link...")
+                                } else {
+                                    Icon(Icons.Default.Share, null)
+                                    Spacer(Modifier.width(8.dp))
+                                    Text("Share with Doctor (48h link)")
+                                }
+                            }
+                        }
+                    }
+                }
+
                 Spacer(Modifier.height(16.dp))
             }
         }

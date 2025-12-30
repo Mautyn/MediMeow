@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import pl.edu.pk.student.core.domain.ShareableItem
+import pl.edu.pk.student.feature_medical_records.domain.models.MedicalRecord
 import pl.edu.pk.student.feature_medical_records.domain.models.MedicalRecordType
 import pl.edu.pk.student.feature_share.data.ShareFormat
 import pl.edu.pk.student.feature_share.data.ShareResult
@@ -204,6 +205,38 @@ fun ShareScreen(
                         )
                     }
                 }
+            if (uiState.xrayRecords.isNotEmpty()) {
+                Column(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+                    Text(
+                        "X-Ray Images",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+
+                    Text(
+                        "Generate secure download links for DICOM files (expires in 48h)",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    Spacer(Modifier.height(8.dp))
+
+                    uiState.xrayRecords.forEach { record ->
+                        XRayShareCard(
+                            record = record,
+                            onShare = { viewModel.shareXRayWithDoctor(record, context) }
+                        )
+                    }
+
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                }
+            }
+
 
             // Records list
             if (uiState.availableRecords.isEmpty()) {
@@ -558,6 +591,71 @@ private fun FilterOption(
                     contentDescription = "Selected",
                     tint = MaterialTheme.colorScheme.primary
                 )
+            }
+        }
+    }
+}
+
+@Composable
+private fun XRayShareCard(
+    record: MedicalRecord,
+    onShare: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                Icons.Default.Image,
+                contentDescription = null,
+                modifier = Modifier.size(40.dp),
+                tint = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+
+            Spacer(Modifier.width(16.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = record.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+
+                Text(
+                    text = SimpleDateFormat("MMM dd, yyyy • HH:mm", Locale.getDefault())
+                        .format(Date(record.timestamp)),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(0.7f)
+                )
+
+                Spacer(Modifier.height(4.dp))
+
+                Text(
+                    text = "DICOM file • Secure 48h link",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            Button(
+                onClick = onShare,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
+            ) {
+                Icon(Icons.Default.Share, null, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(8.dp))
+                Text("Share")
             }
         }
     }

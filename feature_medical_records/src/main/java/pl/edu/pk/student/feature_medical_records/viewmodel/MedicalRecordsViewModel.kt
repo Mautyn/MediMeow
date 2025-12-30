@@ -1,5 +1,6 @@
 package pl.edu.pk.student.feature_medical_records.viewmodel
 
+import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -17,8 +18,11 @@ import kotlinx.coroutines.withContext
 import pl.edu.pk.student.feature_medical_records.data.repository.MedicalRecordsRepository
 import pl.edu.pk.student.feature_medical_records.domain.models.MedicalRecord
 import pl.edu.pk.student.feature_medical_records.domain.models.MedicalRecordType
+import java.io.File
 import java.util.UUID
 import javax.inject.Inject
+
+
 
 sealed class MedicalRecordsUiState {
     object Loading : MedicalRecordsUiState()
@@ -28,7 +32,7 @@ sealed class MedicalRecordsUiState {
 
 @HiltViewModel
 class MedicalRecordsViewModel @Inject constructor(
-    private val repository: MedicalRecordsRepository
+    private val repository: MedicalRecordsRepository,
 ) : ViewModel() {
 
     private val _currentRecordType = MutableStateFlow<MedicalRecordType?>(null)
@@ -55,6 +59,7 @@ class MedicalRecordsViewModel @Inject constructor(
                 initialValue = emptyList()
             )
         } ?: MutableStateFlow(emptyList())
+
 
     fun setCurrentRecordType(type: MedicalRecordType) {
         _currentRecordType.value = type
@@ -144,12 +149,12 @@ class MedicalRecordsViewModel @Inject constructor(
         }
     }
 
-    fun deleteRecord(recordId: String) {
+    fun deleteRecord(recordId: String, type: MedicalRecordType) {
         viewModelScope.launch {
             _isLoading.value = true
             _errorMessage.value = null
 
-            repository.deleteRecord(recordId).fold(
+            repository.deleteRecord(recordId, type).fold(
                 onSuccess = {
                     _successMessage.value = "Record deleted successfully"
                     _isLoading.value = false
@@ -197,4 +202,120 @@ class MedicalRecordsViewModel @Inject constructor(
         _errorMessage.value = null
         _successMessage.value = null
     }
+
+    private val _xrayUploadState = MutableStateFlow<XRayUploadState>(XRayUploadState.Idle)
+    val xrayUploadState: StateFlow<XRayUploadState> = _xrayUploadState.asStateFlow()
+
+
+    fun resetXRayUploadState() {
+        _xrayUploadState.value = XRayUploadState.Idle
+    }
+
+    fun uploadXRayToSupabase(
+        title: String,
+        fileUri: Uri,
+        context: Context,
+        onComplete: (Result<String>) -> Unit
+    ) {
+        viewModelScope.launch {
+            try {
+                _xrayUploadState.value = XRayUploadState.Uploading(0)
+
+                val userId = repository.getCurrentUserId()
+
+                // Copy file to cache
+                val inputStream = context.contentResolver.openInputStream(fileUri)
+                    ?: throw Exception("Cannot open file")
+
+                val tempFile = File(context.cacheDir, "temp_xray_${System.currentTimeMillis()}.tmp")
+                tempFile.outputStream().use { output ->
+                    inputStream.copyTo(output)
+                }
+                inputStream.close()
+
+                _xrayUploadState.value = XRayUploadState.Uploading(30)
+
+                // Upload to Supabase
+                val uploadResult = repository.supabaseStorageService.uploadDicomFile(
+                    file = tempFile,
+                    userId = userId,
+                    fileName = title
+                )
+
+                uploadResult.fold(
+                    onSuccess = { result ->
+                        _xrayUploadState.value = XRayUploadState.Uploading(70)
+
+                        // Save to Firestore
+                        val saveResult = repository.addRecordWithSupabaseImage(
+                            type = MedicalRecordType.XRAY,
+                            title = title,
+                            uploadResult = result
+                        )
+
+                        tempFile.delete()
+
+                        saveResult.fold(
+                            onSuccess = { recordId ->
+                                _xrayUploadState.value = XRayUploadState.Success(result.publicUrl)
+                                _successMessage.value = "X-Ray uploaded successfully to Supabase"
+                                onComplete(Result.success(recordId))
+                            },
+                            onFailure = { error ->
+                                _xrayUploadState.value = XRayUploadState.Error(error.message ?: "Save failed")
+                                onComplete(Result.failure(error))
+                            }
+                        )
+                    },
+                    onFailure = { error ->
+                        tempFile.delete()
+                        _xrayUploadState.value = XRayUploadState.Error(error.message ?: "Upload failed")
+                        onComplete(Result.failure(error))
+                    }
+                )
+
+            } catch (e: Exception) {
+                _xrayUploadState.value = XRayUploadState.Error(e.message ?: "Unknown error")
+                onComplete(Result.failure(e))
+            }
+        }
+    }
+    fun shareXRayWithDoctor(
+        record: MedicalRecord,
+        expiresInHours: Int = 48,
+        onSuccess: (String) -> Unit,
+        onError: (String) -> Unit
+    ) {
+        viewModelScope.launch {
+            try {
+                if (record.supabaseStoragePath == null) {
+                    onError("This record doesn't have a DICOM file")
+                    return@launch
+                }
+
+                val result = repository.supabaseStorageService.generateSignedUrl(
+                    path = record.supabaseStoragePath,
+                    expiresInHours  = expiresInHours * 3600
+                )
+
+                result.fold(
+                    onSuccess = { signedUrl ->
+                        onSuccess(signedUrl)
+                    },
+                    onFailure = { error ->
+                        onError(error.message ?: "Failed to generate share link")
+                    }
+                )
+            } catch (e: Exception) {
+                onError(e.message ?: "Unknown error")
+            }
+        }
+    }
+}
+
+sealed class XRayUploadState {
+    object Idle : XRayUploadState()
+    data class Uploading(val progress: Int) : XRayUploadState()
+    data class Success(val imageUrl: String) : XRayUploadState()
+    data class Error(val message: String) : XRayUploadState()
 }

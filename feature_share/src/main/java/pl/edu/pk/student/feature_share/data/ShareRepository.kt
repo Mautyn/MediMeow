@@ -13,6 +13,8 @@ import androidx.core.content.FileProvider
 import dagger.hilt.android.qualifiers.ApplicationContext
 import pl.edu.pk.student.core.domain.ShareableItem
 import pl.edu.pk.student.core.domain.formatTimestamp
+import pl.edu.pk.student.feature_medical_records.data.repository.MedicalRecordsRepository
+import pl.edu.pk.student.feature_medical_records.domain.models.MedicalRecord
 import java.io.File
 import java.io.FileOutputStream
 import javax.inject.Inject
@@ -24,16 +26,33 @@ sealed class ShareFormat {
     object Pdf : ShareFormat()
 }
 
+
 sealed class ShareResult {
     data class Success(val intent: Intent) : ShareResult()
     data class Error(val message: String) : ShareResult()
 }
 
+
 @Singleton
 class ShareRepository @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val medicalRecordsRepository: MedicalRecordsRepository
 ) {
+    suspend fun shareXRayWithDoctor(
+        record: MedicalRecord,
+        expiresInHours: Int = 48
+    ): Result<String> {
+        val storagePath = record.supabaseStoragePath
 
+        return if (storagePath != null) {
+            medicalRecordsRepository.supabaseStorageService.generateSignedUrl(
+                path = storagePath,
+                expiresInHours = expiresInHours
+            )
+        } else {
+            Result.failure(Exception("No Supabase file found"))
+        }
+    }
     fun shareItems(
         items: List<ShareableItem>,
         format: ShareFormat,
@@ -48,6 +67,21 @@ class ShareRepository @Inject constructor(
         } catch (e: Exception) {
             ShareResult.Error("Failed to create share: ${e.message}")
         }
+    }
+
+    fun shareXRayRecord(record: MedicalRecord): ShareResult {
+        val shareText = """
+        X-Ray: ${record.title}
+        Date: ${formatTimestamp(record.timestamp)}
+        View: ${record.externalImageUrl}
+    """.trimIndent()
+
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_TEXT, shareText)
+        }
+
+        return ShareResult.Success(Intent.createChooser(intent, "Share X-Ray"))
     }
 
     private fun createTextShare(items: List<ShareableItem>): ShareResult {

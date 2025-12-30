@@ -1,5 +1,6 @@
 package pl.edu.pk.student.feature_share.viewmodel
 
+import android.content.Intent
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,10 +18,14 @@ import pl.edu.pk.student.feature_medical_records.domain.models.MedicalRecordType
 import pl.edu.pk.student.feature_share.data.ShareFormat
 import pl.edu.pk.student.feature_share.data.ShareRepository
 import pl.edu.pk.student.feature_share.data.ShareResult
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import javax.inject.Inject
 
 data class ShareUiState(
     val availableRecords: List<ShareableItem> = emptyList(),
+    val xrayRecords: List<MedicalRecord> = emptyList(),  // ← DODAJ
     val selectedRecords: Set<String> = emptySet(),
     val selectedFormat: ShareFormat = ShareFormat.Html,
     val includeImages: Boolean = true,
@@ -36,7 +41,7 @@ sealed class ShareEvent {
 @HiltViewModel
 class ShareViewModel @Inject constructor(
     private val shareRepository: ShareRepository,
-    private val medicalRecordsRepository: MedicalRecordsRepository
+    medicalRecordsRepository: MedicalRecordsRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ShareUiState())
@@ -49,20 +54,21 @@ class ShareViewModel @Inject constructor(
     private val prescriptionsFlow = medicalRecordsRepository.getRecordsByType(MedicalRecordType.PRESCRIPTIONS)
     private val recommendationsFlow = medicalRecordsRepository.getRecordsByType(MedicalRecordType.DOCTOR_RECOMMENDATIONS)
 
-    // Combine all flows into one with explicit type
+    // ← DODAJ X-RAY FLOW
+    private val xrayFlow = medicalRecordsRepository.getRecordsByType(MedicalRecordType.XRAY)
+
+    // Combine all flows (BEZ X-Ray)
     val allRecords: StateFlow<List<ShareableItem>> = combine(
         testResultsFlow,
         prescriptionsFlow,
         recommendationsFlow
     ) { testResults, prescriptions, recommendations ->
-        // Combine lists and explicitly declare as ShareableItem
         val combinedList: List<ShareableItem> = listOf(
             testResults,
             prescriptions,
             recommendations
         ).flatten()
 
-        // Sort by timestamp
         combinedList.sortedByDescending { it.timestamp }
     }.stateIn(
         scope = viewModelScope,
@@ -71,10 +77,10 @@ class ShareViewModel @Inject constructor(
     )
 
     init {
+        // Collect medical records (bez X-Ray)
         viewModelScope.launch {
             allRecords.collect { records ->
                 val filteredRecords = if (_uiState.value.filterType != null) {
-                    // Filter records by type - cast to MedicalRecord to access 'type' property
                     records.mapNotNull { it as? MedicalRecord }
                         .filter { it.type == _uiState.value.filterType }
                 } else {
@@ -83,6 +89,15 @@ class ShareViewModel @Inject constructor(
 
                 _uiState.value = _uiState.value.copy(
                     availableRecords = filteredRecords
+                )
+            }
+        }
+
+        // ← DODAJ Collect X-Ray records
+        viewModelScope.launch {
+            xrayFlow.collect { xrays ->
+                _uiState.value = _uiState.value.copy(
+                    xrayRecords = xrays
                 )
             }
         }
@@ -117,8 +132,13 @@ class ShareViewModel @Inject constructor(
     }
 
     fun setFilterType(type: MedicalRecordType?) {
+        // ← BLOKUJ X-RAY w filtrze
+        if (type == MedicalRecordType.XRAY) {
+            _events.value = ShareEvent.ShareError("X-Ray images can only be shared individually from the X-Ray section below")
+            return
+        }
+
         val filteredRecords = if (type != null) {
-            // Filter by casting to MedicalRecord and checking type
             allRecords.value.mapNotNull { it as? MedicalRecord }
                 .filter { it.type == type }
         } else {
@@ -161,6 +181,40 @@ class ShareViewModel @Inject constructor(
                 _events.value = ShareEvent.ShareError(result.message)
                 null
             }
+        }
+    }
+
+    // ← DODAJ metodę do sharowania X-Ray
+    fun shareXRayWithDoctor(record: MedicalRecord, context: android.content.Context) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true)
+
+            shareRepository.shareXRayWithDoctor(record, expiresInHours = 48)
+                .onSuccess { shareableUrl ->
+                    _uiState.value = _uiState.value.copy(isLoading = false)
+
+                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                        type = "text/plain"
+                        putExtra(Intent.EXTRA_SUBJECT, "Medical X-Ray: ${record.title}")
+                        putExtra(Intent.EXTRA_TEXT, """
+                            DICOM X-Ray File: ${record.title}
+                            Date: ${SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(Date(record.timestamp))}
+                            
+                            Secure download link (expires in 48 hours):
+                            $shareableUrl
+                            
+                            This is a medical imaging file in DICOM format.
+                            View with DICOM viewer software.
+                        """.trimIndent())
+                    }
+
+                    context.startActivity(Intent.createChooser(shareIntent, "Share with Doctor"))
+                    _events.value = ShareEvent.ShareSuccess("X-Ray link generated successfully")
+                }
+                .onFailure { error ->
+                    _uiState.value = _uiState.value.copy(isLoading = false)
+                    _events.value = ShareEvent.ShareError("Failed to generate share link: ${error.message}")
+                }
         }
     }
 

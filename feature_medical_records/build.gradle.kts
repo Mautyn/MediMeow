@@ -66,6 +66,12 @@ dependencies {
 
     implementation(libs.coil.compose)
 
+    implementation("io.github.jan-tennert.supabase:storage-kt:2.6.0")
+    implementation("io.github.jan-tennert.supabase:postgrest-kt:2.6.0")
+    implementation("io.ktor:ktor-client-android:2.3.12")
+    implementation("io.ktor:ktor-client-core:2.3.12")
+    implementation("io.ktor:ktor-utils:2.3.12")
+
     implementation(libs.hilt.android)
     implementation(libs.hilt.navigation.compose)
     ksp(libs.hilt.android.compiler)

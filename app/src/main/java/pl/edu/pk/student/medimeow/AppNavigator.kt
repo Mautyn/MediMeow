@@ -151,6 +151,9 @@ fun AppNavigator(
                 onAddRecord = {
                     navController.navigate(NavDestinations.AddRecord.createRoute(recordType.name))
                 },
+                onAddXRayRecord = {
+                    navController.navigate(NavDestinations.AddXRay.route)
+                },
                 onManageRecords = {
                     navController.navigate(NavDestinations.ManageRecords.createRoute(recordType.name))
                 },
@@ -261,6 +264,12 @@ fun AppNavigator(
 
         composable(NavDestinations.MedicineAvailability.route) {
             pl.edu.pk.student.feature_medicine_availability.ui.MedicineAvailabilityScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(NavDestinations.AddXRay.route) {
+            pl.edu.pk.student.feature_medical_records.ui.AddXRayScreen(
                 onBack = { navController.popBackStack() }
             )
         }

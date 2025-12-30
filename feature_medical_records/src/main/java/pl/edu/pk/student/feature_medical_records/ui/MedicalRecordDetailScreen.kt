@@ -12,10 +12,12 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -34,6 +36,7 @@ fun MedicalRecordDetailScreen(
     recordType: MedicalRecordType,
     onBack: () -> Unit,
     onAddRecord: () -> Unit,
+    onAddXRayRecord: () -> Unit,
     onManageRecords: () -> Unit,
     onRecordClick: (MedicalRecord) -> Unit,
     viewModel: MedicalRecordsViewModel = hiltViewModel()
@@ -86,7 +89,13 @@ fun MedicalRecordDetailScreen(
                 modifier = Modifier
                     .padding(32.dp)
                     .size(64.dp),
-                onClick = onAddRecord,
+                onClick = {
+                    if (recordType == MedicalRecordType.XRAY) {
+                        onAddXRayRecord()
+                    } else {
+                        onAddRecord()
+                    }
+                },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary
             ) {
@@ -202,6 +211,7 @@ fun MedicalRecordDetailScreen(
                     items(records) { record ->
                         RecordCard(
                             record = record,
+                            recordType = recordType,
                             onClick = { onRecordClick(record) }
                         )
                     }
@@ -212,15 +222,31 @@ fun MedicalRecordDetailScreen(
 }
 
 @Composable
-private fun RecordCard(record: MedicalRecord, onClick: () -> Unit) {
+private fun RecordCard(
+    record: MedicalRecord,
+    recordType: MedicalRecordType,
+    onClick: () -> Unit
+) {
     val dateFormat = SimpleDateFormat("MMM dd, yyyy - HH:mm", Locale.getDefault())
 
+    val isXRay = recordType == MedicalRecordType.XRAY
+
     Card(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
+        onClick = if (isXRay) {
+            {}
+        } else {
+            onClick
+        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .alpha(if (isXRay) 0.8f else 1f),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = if (isXRay) {
+                MaterialTheme.colorScheme.surfaceVariant
+            } else {
+                MaterialTheme.colorScheme.surface
+            }
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
@@ -234,14 +260,22 @@ private fun RecordCard(record: MedicalRecord, onClick: () -> Unit) {
                 Icons.Default.Description,
                 contentDescription = null,
                 modifier = Modifier.size(40.dp),
-                tint = MaterialTheme.colorScheme.primary
+                tint = if (isXRay) {
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+                } else {
+                    MaterialTheme.colorScheme.primary
+                }
             )
             Spacer(Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     record.title,
                     style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = if (isXRay) {
+                        MaterialTheme.colorScheme.onSurface.copy(0.6f)
+                    } else {
+                        MaterialTheme.colorScheme.onSurface
+                    },
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -261,8 +295,25 @@ private fun RecordCard(record: MedicalRecord, onClick: () -> Unit) {
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(0.5f)
                 )
+
+                if (isXRay) {
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        "View only • Share from Share tab",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
+                    )
+                }
             }
-            if (record.imageUri != null) {
+
+            if (isXRay) {
+                Icon(
+                    Icons.Default.Lock,
+                    contentDescription = "View only",
+                    modifier = Modifier.size(20.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                )
+            } else if (record.imageUri != null) {
                 Icon(
                     Icons.Default.Image,
                     contentDescription = "Has image",
